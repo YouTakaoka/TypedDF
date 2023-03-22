@@ -31,7 +31,7 @@ U_S1: Type = Union[
     datetime.datetime,
     datetime.time,
     Timedelta,
-    Timedelta,
+    Timestamp,
     Period,
 ]
 B1 = TypeVar('B1', bound=U_S1)
@@ -47,7 +47,7 @@ S1 = TypeVar(
     datetime.datetime,
     datetime.time,
     Timedelta,
-    Timedelta,
+    Timestamp,
     Period,
 )
 SCALAR: list[type] = [str, int, bool, float, bytes, complex]
