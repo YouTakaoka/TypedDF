@@ -4,7 +4,7 @@ Module contains `TypedDF` class and some utility functions for the class.
 `TypedDF` is a subclass of `pandas.DataFrame` which can be used with static typecheckers.
 """
 
-from typing import TypedDict, TypeVar, Generic, TypeGuard, Type, TypeAlias, Union, Dict
+from typing import TypedDict, TypeVar, Generic, TypeGuard, Type, TypeAlias, Union
 import pandas as pd
 from pandas import Timestamp, Timedelta, Period
 import yaml
@@ -20,21 +20,6 @@ _TYPE_NAME_TABLE: list[tuple[str, _SCALAR_NAME]] = [
     ('object', 'str')
 ]
 
-U_S1: TypeAlias = Union[
-    str,
-    bytes,
-    bool,
-    int,
-    float,
-    complex,
-    datetime.date,
-    datetime.datetime,
-    datetime.time,
-    Timedelta,
-    Timestamp,
-    Period,
-]
-B1 = TypeVar('B1', bound=U_S1)
 S1 = TypeVar(
     'S1',
     str,
@@ -50,18 +35,7 @@ S1 = TypeVar(
     Timestamp,
     Period,
 )
-SCALAR: list[type] = [str, int, bool, float, bytes, complex]
-S = TypeVar(
-    'S',
-    str,
-    int,
-    bool,
-    float,
-    bytes,
-    complex,
-)
-T = TypeVar('T', bound = TypedDict)
-TD = TypeVar('TD', bound = Dict[str, U_S1])
+TD = TypeVar('TD', bound = TypedDict)
 
 def _conv_typename(name: str) -> _SCALAR_NAME:
     for p, n in _TYPE_NAME_TABLE:
@@ -72,15 +46,14 @@ def _conv_typename(name: str) -> _SCALAR_NAME:
 def _get_datatypes(df: pd.DataFrame) -> dict[str, _SCALAR_NAME]:
     return {k: _conv_typename(str(t)) for k, t in df.dtypes.to_dict().items()}
 
-
-class TypedDF(pd.DataFrame, Generic[T]):
+class TypedDF(pd.DataFrame, Generic[TD]):
     """`pandas.DataFrame` with type
     
     Subclass of `pandas.DataFrame` which can be used with static typecheckers.
     """
     
     @classmethod
-    def from_df(cls, td: Type[T], df: pd.DataFrame) -> 'TypedDF[T]':
+    def from_df(cls, td: Type[TD], df: pd.DataFrame) -> 'TypedDF[TD]':
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
@@ -94,7 +67,7 @@ class TypedDF(pd.DataFrame, Generic[T]):
             TypedDF: Resulting `TypedDF`
         """
 
-        def _typecheck(df: pd.DataFrame) -> TypeGuard[TypedDF[T]]:
+        def _typecheck(df: pd.DataFrame) -> TypeGuard[TypedDF[TD]]:
             datatypes: dict[str, _SCALAR_NAME] = _get_datatypes(df)
             dt: dict[str, str] = {k: v.__name__ for k, v in td.__annotations__.items()}
             return datatypes == dt
@@ -144,3 +117,28 @@ class TypedDF(pd.DataFrame, Generic[T]):
 
         with open(fname, mode='w') as fp:
             fp.write(s)
+
+class GenericSeries(pd.Series, Generic[S1]):
+    @classmethod
+    def from_series(cls, s: pd.Series, t: Type[S1]) -> "GenericSeries"[S1]:
+        def _typecheck(s: pd.Series) -> TypeGuard[GenericSeries[S1]]:
+            return _conv_typename(str(s.dtype)) == t.__name__
+        
+        if not _typecheck(s):
+            raise TypeError('Typecheck failed.')
+        
+        return s
+
+class TypedSeries(pd.Series, Generic[TD]):
+    @classmethod
+    def from_series(cls, s: pd.Series, td: TD) -> "TypedSeries"[TD]:
+        def _typecheck(s: pd.Series) -> TypeGuard[TypedSeries[TD]]:
+            for k, item in s.items():
+                if not isinstance(item, td.__annotations__[str(k)]):
+                    return False
+            return True
+        
+        if not _typecheck(s):
+            raise TypeError('Typecheck failed.')
+        
+        return s
