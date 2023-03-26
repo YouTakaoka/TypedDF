@@ -11,7 +11,7 @@ import yaml
 import re
 import datetime
 
-_SCALAR_NAME: TypeAlias = Union['str', 'int', 'bool', 'float', 'bytes', 'complex']
+_SCALAR_NAME: TypeAlias = Union[str, int, bool, float, bytes, complex]
 _DEFAULT_TYPE: _SCALAR_NAME = 'str'
 _TYPE_NAME_TABLE: list[tuple[str, _SCALAR_NAME]] = [
     (r'int(|[0-9]*)', 'int'),
@@ -20,7 +20,7 @@ _TYPE_NAME_TABLE: list[tuple[str, _SCALAR_NAME]] = [
     ('object', 'str')
 ]
 
-U_S1: Type = Union[
+U_S1: TypeAlias = Union[
     str,
     bytes,
     bool,
@@ -61,6 +61,7 @@ S = TypeVar(
     complex,
 )
 T = TypeVar('T', bound = TypedDict)
+TD = TypeVar('TD', bound = Dict[str, U_S1])
 
 def _conv_typename(name: str) -> _SCALAR_NAME:
     for p, n in _TYPE_NAME_TABLE:
