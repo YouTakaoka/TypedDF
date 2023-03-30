@@ -11,8 +11,8 @@ def main():
     tdf2: TypedDF[GenericIndexType[int], Human2] = TypedDF(df2, Human2) # OK
     print(tdf2)
 
-    tdf_a: TypedDF[GenericIndexType[int], Human2] = tdf   # Static type check fails!
-    tdf2_a: TypedDF[GenericIndexType[int], Human] = tdf2  # Static type check fails!
+    tdf_a: TypedDF[GenericIndexType[int], Human2] = TypedDF(df, Human)    # Static type check fails!
+    tdf2_a: TypedDF[GenericIndexType[int], Human] = TypedDF(df2, Human2)  # Static type check fails!
     print(tdf_a)
     print(tdf2_a)
 
