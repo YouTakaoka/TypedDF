@@ -4,58 +4,18 @@ Module contains `TypedDF` class and some utility functions for the class.
 `TypedDF` is a subclass of `pandas.DataFrame` which can be used with static typecheckers.
 """
 
-from typing import TypedDict, TypeVar, Generic, TypeGuard, Type, TypeAlias, Union, Hashable
-import pandas as pd
-from pandas import Timestamp, Timedelta, Period
 import yaml
-import re
-import datetime
 
-_SCALAR_NAME: TypeAlias = Union[str, int, bool, float, bytes, complex]
-_DEFAULT_TYPE: _SCALAR_NAME = 'str'
-_TYPE_NAME_TABLE: list[tuple[str, _SCALAR_NAME]] = [
-    (r'int(|[0-9]*)', 'int'),
-    (r'float(|[0-9]*)', 'float'),
-    ('bool', 'bool'),
-    ('object', 'str')
-]
+from TypedIndex import *
 
-S1 = TypeVar(
-    'S1',
-    str,
-    bytes,
-    bool,
-    int,
-    float,
-    complex,
-    datetime.date,
-    datetime.datetime,
-    datetime.time,
-    Timedelta,
-    Timestamp,
-    Period,
-)
-TD = TypeVar('TD', bound = TypedDict)
-H = TypeVar('H', bound=Hashable)
-
-def _conv_typename(name: str) -> _SCALAR_NAME:
-    for p, n in _TYPE_NAME_TABLE:
-        if re.fullmatch(p, name):
-            return n
-    return _DEFAULT_TYPE
-
-class TypedDF(pd.DataFrame, Generic[TD]):
+class TypedDF(pd.DataFrame, Generic[IDX, TD]):
     """`pandas.DataFrame` with type
     
     Subclass of `pandas.DataFrame` which can be used with static typecheckers.
     """
-
-    @classmethod
-    def _get_datatypes(cls, df: pd.DataFrame) -> dict[str, _SCALAR_NAME]:
-        return {k: _conv_typename(str(t)) for k, t in df.dtypes.to_dict().items()}
     
     @classmethod
-    def from_df(cls, df: pd.DataFrame, td: Type[TD]) -> 'TypedDF[TD]':
+    def from_df(cls, df: pd.DataFrame, td: Type[TD], index_type: IndexType[IDX]) -> 'TypedDF[IDX, TD]':
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
@@ -69,13 +29,15 @@ class TypedDF(pd.DataFrame, Generic[TD]):
             TypedDF: Resulting `TypedDF`
         """
 
-        def _typecheck(df: pd.DataFrame) -> TypeGuard[TypedDF[TD]]:
-            datatypes: dict[str, _SCALAR_NAME] = cls._get_datatypes(df)
+        def _typecheck(df: pd.DataFrame) -> TypeGuard[TypedDF[IDX, TD]]:
             dt: dict[str, str] = {k: v.__name__ for k, v in td.__annotations__.items()}
-            return datatypes == dt
+            return get_datatypes(df) == dt
         
         if not _typecheck(df):
             raise TypeError('Typecheck failed.')
+        
+        if not index_type.typecheck(df.index):
+            raise TypeError('Index typecheck failed.')
         
         return df
 
@@ -95,7 +57,7 @@ class TypedDF(pd.DataFrame, Generic[TD]):
         """
 
         key: str = 'class {}(TypedDict)'.format(class_name)
-        return yaml.dump({key: cls._get_datatypes(df)}, indent=4)
+        return yaml.dump({key: get_datatypes(df)}, indent=4)
 
     @classmethod
     def save_classdef(cls, df: pd.DataFrame, class_name: str, file_name: str | None = None) -> None:
@@ -124,7 +86,7 @@ class GenericSeries(pd.Series, Generic[S1]):
     @classmethod
     def from_series(cls, s: pd.Series, t: Type[S1]) -> "GenericSeries[S1]":
         def _typecheck(s: pd.Series) -> TypeGuard[GenericSeries[S1]]:
-            return _conv_typename(str(s.dtype)) == t.__name__
+            return conv_typename(str(s.dtype)) == t.__name__
         
         if not _typecheck(s):
             raise TypeError('Typecheck failed.')
@@ -144,30 +106,3 @@ class TypedSeries(pd.Series, Generic[TD]):
             raise TypeError('Typecheck failed.')
         
         return s
-
-class GenericIndex(pd.Index, Generic[H]):
-    @classmethod
-    def from_index(cls, idx: pd.Index, t: Type[H]) -> "GenericIndex[H]":
-        def _typecheck(idx: pd.Index) -> TypeGuard[GenericIndex[H]]:
-            return _conv_typename(str(idx.dtype)) == t.__name__
-
-        if not _typecheck(idx):
-            raise TypeError('Typecheck failed.')
-        
-        return idx
-    
-class TypedMultiIndex(pd.MultiIndex, Generic[TD]):
-    @classmethod
-    def from_index(cls, idx: pd.Index, td: Type[TD]) -> "TypedMultiIndex[TD]":
-        def _get_datatypes(idx: pd.Index) -> dict[str, Type]:
-            return {str(k): _conv_typename(str(t)) for k, t in idx.dtypes.to_dict().items()}
-        
-        def _typecheck(idx: pd.Index) -> TypeGuard[TypedMultiIndex[TD]]:
-            datatypes: dict[str, Type] = _get_datatypes(idx)
-            dt: dict[str, str] = {k: v.__name__ for k, v in td.__annotations__.items()}
-            return datatypes == dt
-        
-        if not _typecheck(idx):
-            raise TypeError('Typecheck failed.')
-        
-        return idx
