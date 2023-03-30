@@ -15,7 +15,7 @@ class TypedDF(pd.DataFrame, Generic[IDX, TD]):
     """
     
     @classmethod
-    def from_df(cls, df: pd.DataFrame, td: Type[TD], index_type: IndexType[IDX]) -> 'TypedDF[IDX, TD]':
+    def from_df(cls, df: pd.DataFrame, td: Type[TD], index_type: IDX) -> 'TypedDF[IDX, TD]':
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
