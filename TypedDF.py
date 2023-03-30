@@ -14,8 +14,7 @@ class TypedDF(pd.DataFrame, Generic[IDX, TD]):
     Subclass of `pandas.DataFrame` which can be used with static typecheckers.
     """
     
-    @classmethod
-    def from_df(cls, df: pd.DataFrame, td: Type[TD], index_type: IDX | GenericIndexType[int] = GIT_INT) -> 'TypedDF[IDX, TD]':
+    def __new__(cls, df: pd.DataFrame, td: Type[TD], index_type: IDX = GIT_INT) -> 'TypedDF[IDX, TD]':
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
@@ -83,8 +82,7 @@ class TypedDF(pd.DataFrame, Generic[IDX, TD]):
             fp.write(s)
 
 class GenericSeries(pd.Series, Generic[S1]):
-    @classmethod
-    def from_series(cls, s: pd.Series, t: Type[S1]) -> "GenericSeries[S1]":
+    def __new__(cls, s: pd.Series, t: Type[S1]) -> "GenericSeries[S1]":
         def _typecheck(s: pd.Series) -> TypeGuard[GenericSeries[S1]]:
             return conv_typename(str(s.dtype)) == t.__name__
         
@@ -94,8 +92,7 @@ class GenericSeries(pd.Series, Generic[S1]):
         return s
 
 class TypedSeries(pd.Series, Generic[TD]):
-    @classmethod
-    def from_series(cls, s: pd.Series, td: Type[TD]) -> "TypedSeries[TD]":
+    def __new__(cls, s: pd.Series, td: Type[TD]) -> "TypedSeries[TD]":
         def _typecheck(s: pd.Series) -> TypeGuard[TypedSeries[TD]]:
             for k, item in s.items():
                 if not isinstance(item, td.__annotations__[str(k)]):
