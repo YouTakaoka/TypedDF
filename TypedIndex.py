@@ -1,4 +1,4 @@
-from typing import Generic, TypeGuard, Type, NewType
+from typing import TypeGuard
 import pandas as pd
 
 from _types import *
@@ -14,16 +14,13 @@ class GenericIndexType(IndexType, Generic[H]):
     def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[GenericIndexType[H]]]":
         return conv_typename(str(idx.dtype)) == self.t.__name__
 
-class TypedMultiIndexType(IndexType, Generic[TD]):
-    def __init__(self, td: Type[TD]) -> None:
-        self.td = td
+class TypedMultiIndexType(IndexType):
+    def __init__(self, *ts: Type[Hashable]) -> None:
+        self.ts: list[str] = [t.__name__ for t in ts]
 
-    def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[TypedMultiIndexType[TD]]]":
-        def _get_datatypes(idx: pd.Index) -> dict[str, Type]:
-            return {str(k): conv_typename(str(t)) for k, t in idx.to_frame().dtypes.to_dict().items()}
-        
-        dt: dict[str, str] = {k: v.__name__ for k, v in self.td.__annotations__.items()}
-        return _get_datatypes(idx) == dt
+    def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[TypedMultiIndexType]]":
+        ts: List[SCALAR_NAME] = [conv_typename(str(t)) for _, t in idx.to_frame().items()]
+        return self.ts == ts
 
 GIT_INT: GenericIndexType[int] = GenericIndexType(int)
 

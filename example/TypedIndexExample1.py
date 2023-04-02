@@ -12,17 +12,12 @@ class IdxType2(TypedDict):
 def main():
     df: pd.DataFrame = pd.read_csv('example/human_list.csv')
     idx: pd.Index = df.set_index(['name', 'age']).index
-    TMI1: TypedMultiIndexType[IdxType1] = TypedMultiIndexType(IdxType1)
+    TMI1 = TypedMultiIndexType(str, int)
     print(TypedIndex(idx, TMI1))
 
     idx2: pd.Index = df.set_index(['name', 'age', 'married']).index
-    TMI2: TypedMultiIndexType[IdxType2] = TypedMultiIndexType(IdxType2)
+    TMI2 = TypedMultiIndexType(str, int, bool)
     print(TypedIndex(idx2, TMI2))
-
-    TMI1_a: TypedMultiIndexType[IdxType2] = TypedMultiIndexType(IdxType1)  # Static type check fails!
-    TMI2_a: TypedMultiIndexType[IdxType1] = TypedMultiIndexType(IdxType2)  # OK
-    print(TypedIndex(idx, TMI1_a))
-    print(TypedIndex(idx2, TMI2_a))
 
     try:
         print(TypedIndex(idx2, TMI1)) #Runtime error!
