@@ -1,16 +1,9 @@
 from TypedDF import *
 
-class IdxType1(TypedDict):
-    name: str
-    age: int
-
-class IdxType2(TypedDict):
-    name: str
-    age: int
-    married: bool
-
-def main():
+def main() -> None:
     df: pd.DataFrame = pd.read_csv('example/human_list.csv')
+    print(df)
+
     idx: pd.Index = df.set_index(['name', 'age']).index
     TMI1 = TypedMultiIndexType(str, int)
     print(TypedIndex(idx, TMI1))

@@ -19,7 +19,7 @@ class TypedMultiIndexType(IndexType):
         self.ts: list[str] = [t.__name__ for t in ts]
 
     def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[TypedMultiIndexType]]":
-        ts: List[SCALAR_NAME] = [conv_typename(str(t)) for _, t in idx.to_frame().items()]
+        ts: list[SCALAR_NAME] = [conv_typename(str(t)) for t in idx.to_frame().dtypes]
         return self.ts == ts
 
 GIT_INT: GenericIndexType[int] = GenericIndexType(int)
