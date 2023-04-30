@@ -5,20 +5,20 @@ def main() -> None:
     print(df)
 
     idx: pd.Index = df.set_index(['name', 'age']).index
-    TMI1 = TypedMultiIndexType(str, int)
-    print(TypedIndex(idx, TMI1))
+    TI1: TypedIndex[str, int] = TypedIndex(idx, T_STR, T_INT)
+    print(TI1)
 
     idx2: pd.Index = df.set_index(['name', 'age', 'married']).index
-    TMI2 = TypedMultiIndexType(str, int, bool)
-    print(TypedIndex(idx2, TMI2))
+    TI2 = TypedIndex(idx2, T_STR, T_INT, T_BOOL)
+    print(TI2)
 
     try:
-        print(TypedIndex(idx2, TMI1)) #Runtime error!
+        print(TypedIndex(idx2, T_STR, T_INT)) #Runtime error!
     except TypeError as e:
         print(e)
     
     try:
-        print(TypedIndex(idx, TMI2)) #Runtime error!
+        print(TypedIndex(idx, T_STR, T_INT, T_BOOL)) #Runtime error!
     except TypeError as e:
         print(e)
 

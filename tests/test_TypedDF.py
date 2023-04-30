@@ -13,20 +13,20 @@ df2['comment'] = ["I'll be back!", ""]
 
 class TestTypedDF(unittest.TestCase):
     def test_loading(self):
-        tdf: TypedDF[GenericIndexType[int], Human] = TypedDF(df, Human)
+        tdf: TypedDF[Human, int] = TypedDF(df, Human, T_INT)
         self.assertTrue((tdf == df).all().all())
 
     def test_loading2(self):
-        tdf2: TypedDF[GenericIndexType[int], Human2] = TypedDF(df2, Human2)
+        tdf2: TypedDF[Human2, int] = TypedDF(df2, Human2, T_INT)
         self.assertTrue((tdf2 == df2).all().all())
 
     def test_typecheck(self):
         with self.assertRaises(TypeError):
-            tdf: TypedDF[GenericIndexType[int], Human2] = TypedDF(df, Human2)
+            tdf: TypedDF[Human2, int] = TypedDF(df, Human2, T_INT)
 
     def test_typecheck2(self):
         with self.assertRaises(TypeError):
-            tdf2: TypedDF[GenericIndexType[int], Human] = TypedDF(df2, Human)
+            tdf2: TypedDF[Human, int] = TypedDF(df2, Human, T_INT)
 
 if __name__ == '__main__':
     unittest.main()

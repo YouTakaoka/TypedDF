@@ -1,8 +1,9 @@
 import datetime
 import pandas as pd
 from pandas import Timestamp, Timedelta, Period
-from typing import TypedDict, TypeVar, TypeAlias, Union, Hashable, Type, Generic, Iterable, Iterator, List, Tuple
-from typing_extensions import TypeVarTuple, Unpack
+from typing import TypedDict, TypeVar, TypeAlias, Union, Hashable, Type, Generic, Iterable, Iterator, List, Tuple, NewType, Literal
+from typing_extensions import TypeVarTuple, Unpack, Self
+from enum import Enum
 import re
 
 SCALAR_NAME: TypeAlias = Union[str, int, bool, float, bytes, complex]
@@ -36,29 +37,13 @@ S1 = TypeVar(
 )
 TD = TypeVar('TD', bound = TypedDict)
 H = TypeVar('H', bound = Hashable)
-_T_co = TypeVar('_T_co', covariant=True)
 
-class CoList(Iterable[_T_co], Generic[_T_co]):
-    def __init__(self, items: Iterable[_T_co]) -> None:
-        self._items: Iterable[_T_co] = items
-
-    def __iter__(self) -> Iterator[_T_co]:
-        return self._items.__iter__()
-    
-    def to_list(self) -> List[_T_co]:
-        return list(self._items)
-
-H1 = TypeVar('H1', bound = CoList[Type[Hashable]])
 H2 = TypeVar('H2', bound = tuple[Type[Hashable], ...])
 
 Ts = TypeVarTuple('Ts')
-
-class TypeTuple(Tuple[Type], Generic[Unpack[Ts]]):
-    def __new__(cls, *args: Type[Hashable]) -> "TypeTuple[Unpack[Ts]]":
-        Ts = args
-        return super().__new__(cls, args)
-
-tt = TypeTuple(str, int)
+T_STR = ""
+T_INT = 0
+T_BOOL = True
 
 def get_datatypes(df: pd.DataFrame) -> dict[str, SCALAR_NAME]:
     return {k: conv_typename(str(t)) for k, t in df.dtypes.to_dict().items()}

@@ -3,32 +3,29 @@ import pandas as pd
 
 from _types import *
 
-class IndexType:
-    def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex]":
-        ...
+T_STR = ""
+T_INT = 0
+T_BOOL = True
 
-class GenericIndexType(IndexType, Generic[H]):
-    def __init__(self, t: Type[H]) -> None:
-        self.t = t
+T_LIT = Literal["", 0, True]
 
-    def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[GenericIndexType[H]]]":
-        return conv_typename(str(idx.dtype)) == self.t.__name__
+_TYPE_DICT: dict[T_LIT, SCALAR_NAME] = {
+    T_STR: "str",
+    T_INT: "int",
+    T_BOOL: "bool",
+}
 
-class TypedMultiIndexType(IndexType):
-    def __init__(self, *ts: Type[Hashable]) -> None:
-        self.ts: list[str] = [t.__name__ for t in ts]
+def _get_typename(t) -> SCALAR_NAME:
+    assert t in _TYPE_DICT.keys()
+    return _TYPE_DICT[t]
 
-    def typecheck(self, idx: pd.Index) -> "TypeGuard[TypedIndex[TypedMultiIndexType]]":
-        ts: list[SCALAR_NAME] = [conv_typename(str(t)) for t in idx.to_frame().dtypes]
-        return self.ts == ts
-
-GIT_INT: GenericIndexType[int] = GenericIndexType(int)
-
-IDX = TypeVar('IDX', bound = IndexType)
-
-class TypedIndex(pd.Index, Generic[IDX]):
-    def __new__(cls, idx: pd.Index, index_type: IDX) -> "TypedIndex[IDX]":
-        if not index_type.typecheck(idx):
-            raise TypeError('Index typecheck failed.')
-       
+class TypedIndex(pd.Index, Generic[Unpack[Ts]]):
+    def __new__(cls, idx: pd.Index, *ts: Unpack[Ts]) -> Self:
+        if not cls.typecheck(idx, ts):
+            raise TypeError("Index typecheck failed.")
         return idx
+
+    @classmethod
+    def typecheck(cls, idx: pd.Index, ts: tuple[Unpack[Ts]]) -> TypeGuard[Self]:
+        tn: list[SCALAR_NAME] = [conv_typename(str(t)) for t in idx.to_frame().dtypes]
+        return tn == [_get_typename(t) for t in ts]

@@ -8,13 +8,13 @@ import yaml
 
 from TypedIndex import *
 
-class TypedDF(pd.DataFrame, Generic[IDX, TD]):
+class TypedDF(pd.DataFrame, Generic[TD, Unpack[Ts]]):
     """`pandas.DataFrame` with type
     
     Subclass of `pandas.DataFrame` which can be used with static typecheckers.
     """
     
-    def __new__(cls, df: pd.DataFrame, td: Type[TD], index_type: IDX = GIT_INT) -> 'TypedDF[IDX, TD]':
+    def __new__(cls, df: pd.DataFrame, td: Type[TD], *index_type: Unpack[Ts]) -> Self:
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
@@ -28,15 +28,12 @@ class TypedDF(pd.DataFrame, Generic[IDX, TD]):
             TypedDF: Resulting `TypedDF`
         """
 
-        def _typecheck(df: pd.DataFrame) -> TypeGuard[TypedDF[IDX, TD]]:
+        def _typecheck(df: pd.DataFrame) -> TypeGuard[Self]:
             dt: dict[str, str] = {k: v.__name__ for k, v in td.__annotations__.items()}
-            return get_datatypes(df) == dt
+            return get_datatypes(df) == dt and TypedIndex.typecheck(df.index, index_type)
         
         if not _typecheck(df):
-            raise TypeError('Typecheck failed.')
-        
-        if not index_type.typecheck(df.index):
-            raise TypeError('Index typecheck failed.')
+            raise TypeError('Typecheck failed: ', df.dtypes, df.index.to_frame().dtypes)
         
         return df
 

@@ -10,8 +10,7 @@ def main():
     df: pd.DataFrame = pd.read_csv('example/human_list.csv')
     df.set_index(['name', 'age'], inplace=True)
 
-    TMI1 = TypedMultiIndexType(str, int)
-    tdf: TypedDF[TypedMultiIndexType, Human] = TypedDF(df, Human, index_type = TMI1)  # OK
+    tdf: TypedDF[Human, str, int] = TypedDF(df, Human, T_STR, T_INT)  # OK
     print(tdf)
 
 if __name__ == '__main__':
