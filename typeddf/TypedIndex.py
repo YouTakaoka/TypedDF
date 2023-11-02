@@ -1,7 +1,7 @@
 from typing import TypeGuard
 import pandas as pd
 
-from _types import *
+from typeddf._types import *
 
 T_STR = ""
 T_INT = 0

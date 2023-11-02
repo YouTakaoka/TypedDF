@@ -1,4 +1,4 @@
-from TypedDF import *
+from typeddf.TypedDF import *
 from example.Human import Human
 from example.Human2 import Human2
 

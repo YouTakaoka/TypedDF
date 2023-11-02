@@ -1,4 +1,4 @@
-from TypedDF import *
+from typeddf.TypedDF import *
 
 def main() -> None:
     df: pd.DataFrame = pd.read_csv('example/human_list.csv')

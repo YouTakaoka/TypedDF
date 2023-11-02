@@ -6,7 +6,7 @@ Module contains `TypedDF` class and some utility functions for the class.
 
 import yaml
 
-from TypedIndex import *
+from typeddf.TypedIndex import *
 
 class TypedDF(pd.DataFrame, Generic[TD, Unpack[Ts]]):
     """`pandas.DataFrame` with type
