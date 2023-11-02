@@ -8,28 +8,31 @@ import yaml
 
 from TypedIndex import *
 
-class TypedDF(pd.DataFrame, Generic[TD, Unpack[Ts]]):
+_DT = TypeVar("_DT", bound = NamedTuple)
+
+class TypedDF(pd.DataFrame, Generic[IDX, _DT]):
     """`pandas.DataFrame` with type
     
     Subclass of `pandas.DataFrame` which can be used with static typecheckers.
     """
     
-    def __new__(cls, df: pd.DataFrame, td: Type[TD], *index_type: Unpack[Ts]) -> Self:
+    def __new__(cls, df: pd.DataFrame, data_type: Type[_DT], index_type: Type[IDX] = int) -> Self:
         """Converts `pandas.DataFrame` to `TypedDF`.
 
         Performs runtime typecheck for the passed `pandas.DataFrame` and converts it to an instance of `TypedDF`.
         If the function fails to typecheck, it raises `TypeError`.
 
         Args:
-            td (Type[T]): A subclass of `type.TypedDict`.
-            df (pandas.DataFrame): `pandas.DataFrame` as the source.
+            df (pandas.DataFrame): `pandas.DataFrame` as the source of data.
+            data_type (Type[_DT]): A subclass of `typing.NamedTuple`.
+            index_type (Type[IDX]): A subclass of `typing.Hashable` or `typing.NamedTuple`.
 
         Returns:
             TypedDF: Resulting `TypedDF`
         """
 
         def _typecheck(df: pd.DataFrame) -> TypeGuard[Self]:
-            dt: dict[str, str] = {k: v.__name__ for k, v in td.__annotations__.items()}
+            dt: dict[str, str] = {k: v.__name__ for k, v in data_type.__annotations__.items()}
             return get_datatypes(df) == dt and TypedIndex.typecheck(df.index, index_type)
         
         if not _typecheck(df):
@@ -88,9 +91,9 @@ class GenericSeries(pd.Series, Generic[S1]):
         
         return s
 
-class TypedSeries(pd.Series, Generic[TD]):
-    def __new__(cls, s: pd.Series, td: Type[TD]) -> "TypedSeries[TD]":
-        def _typecheck(s: pd.Series) -> TypeGuard[TypedSeries[TD]]:
+class TypedSeries(pd.Series, Generic[_DT]):
+    def __new__(cls, s: pd.Series, td: Type[_DT]) -> "TypedSeries[_DT]":
+        def _typecheck(s: pd.Series) -> TypeGuard[TypedSeries[_DT]]:
             for k, item in s.items():
                 if not isinstance(item, td.__annotations__[str(k)]):
                     return False

@@ -19,13 +19,16 @@ def _get_typename(t) -> SCALAR_NAME:
     assert t in _TYPE_DICT.keys()
     return _TYPE_DICT[t]
 
-class TypedIndex(pd.Index, Generic[Unpack[Ts]]):
-    def __new__(cls, idx: pd.Index, *ts: Unpack[Ts]) -> Self:
-        if not cls.typecheck(idx, ts):
+class TypedIndex(pd.Index, Generic[IDX]):
+    def __new__(cls, idx: pd.Index, index_type: IDX) -> Self:
+        if not cls.typecheck(idx, index_type):
             raise TypeError("Index typecheck failed.")
         return idx
 
     @classmethod
-    def typecheck(cls, idx: pd.Index, ts: tuple[Unpack[Ts]]) -> TypeGuard[Self]:
+    def typecheck(cls, idx: pd.Index, index_type: IDX) -> TypeGuard[Self]:
+        if isinstance(index_type, )
+
+        get_datatypes(idx.to_frame())
         tn: list[SCALAR_NAME] = [conv_typename(str(t)) for t in idx.to_frame().dtypes]
-        return tn == [_get_typename(t) for t in ts]
+        return tn == [_get_typename(t) for t in index_type]

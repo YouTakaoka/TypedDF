@@ -1,7 +1,7 @@
 import datetime
 import pandas as pd
 from pandas import Timestamp, Timedelta, Period
-from typing import TypedDict, TypeVar, TypeAlias, Union, Hashable, Type, Generic, Iterable, Iterator, List, Tuple, NewType, Literal
+from typing import NamedTuple, TypeVar, TypeAlias, Union, Hashable, Type, Generic, Iterable, Iterator, List, Tuple, NewType, Literal
 from typing_extensions import TypeVarTuple, Unpack, Self
 from enum import Enum
 import re
@@ -35,15 +35,8 @@ S1 = TypeVar(
     Timestamp,
     Period,
 )
-TD = TypeVar('TD', bound = TypedDict)
-H = TypeVar('H', bound = Hashable)
 
-H2 = TypeVar('H2', bound = tuple[Type[Hashable], ...])
-
-Ts = TypeVarTuple('Ts')
-T_STR = ""
-T_INT = 0
-T_BOOL = True
+IDX = TypeVar("IDX", bound = Hashable | NamedTuple)
 
 def get_datatypes(df: pd.DataFrame) -> dict[str, SCALAR_NAME]:
     return {k: conv_typename(str(t)) for k, t in df.dtypes.to_dict().items()}
